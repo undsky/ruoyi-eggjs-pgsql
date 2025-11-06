@@ -12,9 +12,47 @@ module.exports = (app) => {
   app.addSingleton("pgsql", init);
 };
 
+/**
+ * 将下划线命名转换为驼峰命名
+ * @param {string} str - 下划线命名的字符串
+ * @returns {string} 驼峰命名的字符串
+ */
+function toCamelCase(str) {
+  return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+}
+
+/**
+ * 将对象的键从下划线命名转换为驼峰命名
+ * @param {object} obj - 原始对象
+ * @returns {object} 转换后的对象
+ */
+function convertKeysToCamelCase(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item));
+  }
+
+  const newObj = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const camelKey = toCamelCase(key);
+      newObj[camelKey] = obj[key];
+    }
+  }
+  return newObj;
+}
+
 function init(config, app) {
   const pool = new Pool(config);
   const prod = "prod" == app.config.env;
+  
+  // 获取驼峰命名转换配置，默认为 false（保持向后兼容）
+  const camelCase = app.config.pgsql.camelCase !== undefined 
+    ? app.config.pgsql.camelCase 
+    : false;
 
   async function run(sql, values = []) {
     if (!prod) console.time(sql);
@@ -32,12 +70,15 @@ function init(config, app) {
 
   async function select(sql, values = []) {
     const result = await run(sql, values);
-    return result.rows.length > 0 ? result.rows[0] : null;
+    const row = result.rows.length > 0 ? result.rows[0] : null;
+    // 根据配置决定是否转换为驼峰命名
+    return row ? (camelCase ? convertKeysToCamelCase(row) : row) : null;
   }
 
   async function selects(sql, values = []) {
     const result = await run(sql, values);
-    return result.rows;
+    // 根据配置决定是否转换为驼峰命名
+    return camelCase ? convertKeysToCamelCase(result.rows) : result.rows;
   }
 
   async function insert(sql, values = []) {

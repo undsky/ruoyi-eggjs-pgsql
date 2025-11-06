@@ -14,6 +14,10 @@ module.exports = (appInfo) => ({
       idleTimeoutMillis: 30000,  // 空闲连接超时时间
       connectionTimeoutMillis: 2000,  // 连接超时时间
     },
+    // 是否自动将查询结果的字段名从下划线命名转换为驼峰命名
+    // 例如: user_name -> userName, created_at -> createdAt
+    // 默认值: false (保持向后兼容)
+    camelCase: false,
     // Single
     // client: {
     //   host: '127.0.0.1',

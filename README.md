@@ -9,6 +9,7 @@
 - ✅ 基于 node-postgres 连接池，性能优异
 - ✅ 支持单实例和多实例配置
 - ✅ 提供简洁的 API 封装（select、insert、update、delete）
+- ✅ **可选的驼峰命名转换**：支持将数据库字段从 snake_case 自动转换为 camelCase（v1.1.0+）
 - ✅ 内置事务支持，自动提交和回滚
 - ✅ 开发环境自动打印 SQL 执行时间
 - ✅ 错误信息包含执行的 SQL 语句
@@ -102,8 +103,45 @@ config.pgsql = {
 | idleTimeoutMillis | Number | 10000 | 空闲连接超时时间（毫秒） |
 | connectionTimeoutMillis | Number | 0 | 连接超时时间（毫秒） |
 | ssl | Boolean/Object | false | SSL 配置 |
+| **camelCase** | **Boolean** | **false** | **是否自动将字段名转换为驼峰命名（v1.1.0+）** |
 
 更多配置选项请参考 [node-postgres 文档](https://node-postgres.com/api/pool)。
+
+#### 驼峰命名配置（camelCase）
+
+从 **v1.1.0** 开始，支持通过 `camelCase` 配置项控制是否自动转换字段名：
+
+```js
+// {app_root}/config/config.default.js
+config.pgsql = {
+  default: {
+    port: 5432,
+    max: 100,
+  },
+  // 开启驼峰命名转换
+  camelCase: true,  // 将 user_name 转换为 userName
+  client: {
+    host: "127.0.0.1",
+    user: "postgres",
+    password: "your_password",
+    database: "your_database",
+  },
+};
+```
+
+**启用后的效果**：
+
+```js
+// camelCase: false (默认)
+const user = await app.pgsql.select('SELECT user_id, user_name FROM users WHERE id = $1', [1]);
+console.log(user);
+// 返回: { user_id: 1, user_name: '张三' }
+
+// camelCase: true (启用驼峰转换)
+const user = await app.pgsql.select('SELECT user_id, user_name FROM users WHERE id = $1', [1]);
+console.log(user);
+// 返回: { userId: 1, userName: '张三' }
+```
 
 ## 使用方法
 
