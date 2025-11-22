@@ -18,7 +18,14 @@ module.exports = (app) => {
  * @returns {string} 驼峰命名的字符串
  */
 function toCamelCase(str) {
-  return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+  // 判断是否全是大写字母（忽略下划线和数字）
+  const isAllUpperCase = /^[A-Z0-9_]+$/.test(str);
+  
+  // 如果全是大写，先转为小写
+  const normalizedStr = isAllUpperCase ? str.toLowerCase() : str;
+  
+  // 将下划线后的字母转为大写
+  return normalizedStr.replace(/_([a-zA-Z])/g, (match, letter) => letter.toUpperCase());
 }
 
 /**
