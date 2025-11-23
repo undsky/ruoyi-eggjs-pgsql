@@ -77,7 +77,7 @@ function init(config, app) {
 
   async function select(sql, values = []) {
     const result = await run(sql, values);
-    const row = result.rows.length > 0 ? result.rows[0] : null;
+    const row = result.rows && result.rows.length > 0 ? result.rows[0] : null;
     // 根据配置决定是否转换为驼峰命名
     return row ? (camelCase ? convertKeysToCamelCase(row) : row) : null;
   }
