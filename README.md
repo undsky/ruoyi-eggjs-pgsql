@@ -10,6 +10,7 @@
 - ✅ 支持单实例和多实例配置
 - ✅ 提供简洁的 API 封装（select、insert、update、delete）
 - ✅ **可选的驼峰命名转换**：支持将数据库字段从 snake_case 自动转换为 camelCase（v1.1.0+）
+- ✅ **时区问题修复**：自动处理日期类型，避免时区转换问题（v1.1.6+）
 - ✅ 内置事务支持，自动提交和回滚
 - ✅ 开发环境自动打印 SQL 执行时间
 - ✅ 错误信息包含执行的 SQL 语句
@@ -516,7 +517,52 @@ console.log(result.id);
 
 3. **连接池管理**：插件自动管理连接池，无需手动释放连接（除非直接操作 `pool`）
 
-4. **时区问题**：PostgreSQL 默认使用 UTC 时区，如需设置时区，在配置中添加 `timezone: 'Asia/Shanghai'`
+4. **时区问题**（重要）：
+
+   **问题描述**：PostgreSQL 的 `pg` 库默认会将 `TIMESTAMP` 和 `TIMESTAMPTZ` 类型转换为 JavaScript Date 对象，导致时区转换问题。
+   
+   ```js
+   // 数据库存储：2025-11-24 12:23:47 (本地时间)
+   // 查询结果：  2025-11-24T04:23:47.000Z (UTC，可能相差 8 小时)
+   ```
+   
+   **解决方案**：从 **v1.1.6** 开始，插件已自动处理日期类型解析，将所有日期时间字段保持为字符串格式：
+   
+   ```js
+   // 插件已自动配置以下类型解析器：
+   // - TIMESTAMP (1114): 不带时区的时间戳
+   // - TIMESTAMPTZ (1184): 带时区的时间戳
+   // - DATE (1082): 日期
+   // - TIME (1083/1266): 时间
+   ```
+   
+   **效果对比**：
+   ```js
+   // v1.1.6+ (已修复)
+   const user = await app.pgsql.select('SELECT create_time FROM users WHERE id = $1', [1]);
+   console.log(user.create_time);
+   // 输出: "2025-11-24 12:23:47" ✅ 正确
+   
+   // v1.1.5 及之前版本
+   const user = await app.pgsql.select('SELECT create_time FROM users WHERE id = $1', [1]);
+   console.log(user.create_time);
+   // 输出: 2025-11-24T04:23:47.000Z ❌ 错误（Date 对象，可能时区不对）
+   ```
+   
+   **服务器时区设置**（可选）：
+   如需在数据库层面设置时区，可在配置中添加：
+   ```js
+   config.pgsql = {
+     client: {
+       host: "127.0.0.1",
+       user: "postgres",
+       password: "your_password",
+       database: "your_database",
+       // 可选：设置服务器会话时区
+       options: '-c timezone=Asia/Shanghai',
+     },
+   };
+   ```
 
 5. **事务使用**：事务会占用一个独立连接直到提交或回滚，注意连接池大小设置
 

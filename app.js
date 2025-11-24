@@ -2,11 +2,19 @@
  * @Author: 姜彦汐
  * @Date: 2024-11-03 09:33:52
  * @LastEditors: 姜彦汐
- * @LastEditTime: 2024-11-03 16:08:17
+ * @LastEditTime: 2025-11-24 16:08:17
  * @Description: PostgreSQL Plugin for Egg.js
  * @Site: https://www.undsky.com
  */
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
+
+// 配置 PostgreSQL 日期类型解析，防止时区转换问题
+// TIMESTAMP (1114) 和 TIMESTAMPTZ (1184) 类型保持为字符串格式
+types.setTypeParser(1114, (val) => val); // TIMESTAMP without time zone
+types.setTypeParser(1184, (val) => val); // TIMESTAMP with time zone
+types.setTypeParser(1082, (val) => val); // DATE
+types.setTypeParser(1083, (val) => val); // TIME without time zone
+types.setTypeParser(1266, (val) => val); // TIME with time zone
 
 module.exports = (app) => {
   app.addSingleton("pgsql", init);
