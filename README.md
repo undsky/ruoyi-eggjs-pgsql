@@ -4,24 +4,29 @@
 
 基于 [node-postgres (pg)](https://github.com/brianc/node-postgres) 的 Egg.js PostgreSQL 插件，提供简单易用的数据库操作接口和连接池管理。
 
+| 公众号                                       | 微信交流群                                                      |
+| -------------------------------------------- | --------------------------------------------------------------- |
+| ![公众号](https://cdn.undsky.com/img/gh.jpg) | ![微信交流群](https://cdn.undsky.com/img/doudouqun.jpg?v=2.0.1) |
+
 ## 目录
 
 - [特性](#特性)
 - [安装](#安装)
+- [支持的 egg 版本](#支持的-egg-版本)
 - [开启插件](#开启插件)
 - [配置](#配置)
 - [使用方法](#使用方法)
 - [API 说明](#api-说明)
 - [开发调试](#开发调试)
-- [使用场景](#使用场景)
+- [完整示例](#完整示例)
 - [PostgreSQL vs MySQL 对比](#postgresql-vs-mysql-对比)
-- [常见问题](#常见问题)
+- [注意事项](#注意事项)
 - [性能优化建议](#性能优化建议)
-- [完整示例项目](#完整示例项目)
+- [完整项目](#完整项目)
+- [请我喝杯咖啡](#请我喝杯咖啡)
 - [联系方式](#联系方式)
 - [贡献指南](#贡献指南)
 - [License](#license)
-
 
 
 ## 特性
@@ -68,9 +73,9 @@ exports.pgsql = {
 config.pgsql = {
   default: {
     port: 5432,
-    max: 100,                          // 连接池最大连接数
-    idleTimeoutMillis: 30000,         // 空闲连接超时时间（毫秒）
-    connectionTimeoutMillis: 2000,    // 连接超时时间（毫秒）
+    max: 100, // 连接池最大连接数
+    idleTimeoutMillis: 30000, // 空闲连接超时时间（毫秒）
+    connectionTimeoutMillis: 2000, // 连接超时时间（毫秒）
   },
   client: {
     host: "127.0.0.1",
@@ -113,18 +118,18 @@ config.pgsql = {
 
 ### 配置参数说明
 
-| 参数 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| host | String | localhost | PostgreSQL 服务器地址 |
-| port | Number | 5432 | PostgreSQL 端口 |
-| user | String | - | 数据库用户名 |
-| password | String | - | 数据库密码 |
-| database | String | - | 数据库名称 |
-| max | Number | 10 | 连接池最大连接数 |
-| idleTimeoutMillis | Number | 10000 | 空闲连接超时时间（毫秒） |
-| connectionTimeoutMillis | Number | 0 | 连接超时时间（毫秒） |
-| ssl | Boolean/Object | false | SSL 配置 |
-| **camelCase** | **Boolean** | **false** | **是否自动将字段名转换为驼峰命名（v1.1.0+）** |
+| 参数                    | 类型           | 默认值    | 说明                                          |
+| ----------------------- | -------------- | --------- | --------------------------------------------- |
+| host                    | String         | localhost | PostgreSQL 服务器地址                         |
+| port                    | Number         | 5432      | PostgreSQL 端口                               |
+| user                    | String         | -         | 数据库用户名                                  |
+| password                | String         | -         | 数据库密码                                    |
+| database                | String         | -         | 数据库名称                                    |
+| max                     | Number         | 10        | 连接池最大连接数                              |
+| idleTimeoutMillis       | Number         | 10000     | 空闲连接超时时间（毫秒）                      |
+| connectionTimeoutMillis | Number         | 0         | 连接超时时间（毫秒）                          |
+| ssl                     | Boolean/Object | false     | SSL 配置                                      |
+| **camelCase**           | **Boolean**    | **false** | **是否自动将字段名转换为驼峰命名（v1.1.0+）** |
 
 更多配置选项请参考 [node-postgres 文档](https://node-postgres.com/api/pool)。
 
@@ -140,7 +145,7 @@ config.pgsql = {
     max: 100,
   },
   // 开启驼峰命名转换
-  camelCase: true,  // 将 user_name 转换为 userName
+  camelCase: true, // 将 user_name 转换为 userName
   client: {
     host: "127.0.0.1",
     user: "postgres",
@@ -154,12 +159,18 @@ config.pgsql = {
 
 ```js
 // camelCase: false (默认)
-const user = await app.pgsql.select('SELECT user_id, user_name FROM users WHERE id = $1', [1]);
+const user = await app.pgsql.select(
+  "SELECT user_id, user_name FROM users WHERE id = $1",
+  [1],
+);
 console.log(user);
 // 返回: { user_id: 1, user_name: '张三' }
 
 // camelCase: true (启用驼峰转换)
-const user = await app.pgsql.select('SELECT user_id, user_name FROM users WHERE id = $1', [1]);
+const user = await app.pgsql.select(
+  "SELECT user_id, user_name FROM users WHERE id = $1",
+  [1],
+);
 console.log(user);
 // 返回: { userId: 1, userName: '张三' }
 ```
@@ -173,39 +184,33 @@ console.log(user);
 const { app } = this;
 
 // 单条查询（参数化查询）
-const user = await app.pgsql.select(
-  'SELECT * FROM users WHERE id = $1',
-  [1]
-);
+const user = await app.pgsql.select("SELECT * FROM users WHERE id = $1", [1]);
 
 // 多条查询
 const users = await app.pgsql.selects(
-  'SELECT * FROM users WHERE age > $1',
-  [18]
+  "SELECT * FROM users WHERE age > $1",
+  [18],
 );
 
 // 插入数据（返回插入的行，需要 RETURNING 子句）
 const result = await app.pgsql.insert(
   "INSERT INTO users (name, age) VALUES ($1, $2) RETURNING id",
-  ['张三', 25]
+  ["张三", 25],
 );
 console.log(result.id); // 新插入行的 ID
 
 // 更新数据（返回影响的行数）
 const affectedRows = await app.pgsql.update(
   "UPDATE users SET age = $1 WHERE id = $2",
-  [26, 1]
+  [26, 1],
 );
 
 // 删除数据（返回影响的行数）
-const deleted = await app.pgsql.del(
-  "DELETE FROM users WHERE id = $1",
-  [1]
-);
+const deleted = await app.pgsql.del("DELETE FROM users WHERE id = $1", [1]);
 
 // 执行任意 SQL
 await app.pgsql.run(
-  "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name VARCHAR(255))"
+  "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name VARCHAR(255))",
 );
 ```
 
@@ -213,12 +218,12 @@ await app.pgsql.run(
 
 ```js
 // 获取指定数据库实例
-const pg1 = app.pgsql.get('pg1');
-const pg2 = app.pgsql.get('pg2');
+const pg1 = app.pgsql.get("pg1");
+const pg2 = app.pgsql.get("pg2");
 
 // 从不同数据库查询
-const user = await pg1.select('SELECT * FROM users WHERE id = $1', [1]);
-const order = await pg2.select('SELECT * FROM orders WHERE id = $1', [1]);
+const user = await pg1.select("SELECT * FROM users WHERE id = $1", [1]);
+const order = await pg2.select("SELECT * FROM orders WHERE id = $1", [1]);
 ```
 
 ## API 说明
@@ -228,7 +233,7 @@ const order = await pg2.select('SELECT * FROM orders WHERE id = $1', [1]);
 执行单条查询，返回第一行数据。
 
 ```js
-const user = await app.pgsql.select('SELECT * FROM users WHERE id = $1', [1]);
+const user = await app.pgsql.select("SELECT * FROM users WHERE id = $1", [1]);
 // 返回: { id: 1, name: '张三', age: 25 } 或 null
 ```
 
@@ -237,7 +242,10 @@ const user = await app.pgsql.select('SELECT * FROM users WHERE id = $1', [1]);
 执行多条查询，返回所有匹配的行。
 
 ```js
-const users = await app.pgsql.selects('SELECT * FROM users WHERE age > $1', [18]);
+const users = await app.pgsql.selects(
+  "SELECT * FROM users WHERE age > $1",
+  [18],
+);
 // 返回: [{ id: 1, name: '张三', age: 25 }, { id: 2, name: '李四', age: 30 }]
 ```
 
@@ -249,14 +257,14 @@ const users = await app.pgsql.selects('SELECT * FROM users WHERE age > $1', [18]
 // 使用 RETURNING 返回插入的数据
 const result = await app.pgsql.insert(
   "INSERT INTO users (name, age) VALUES ($1, $2) RETURNING id, name, age",
-  ['王五', 28]
+  ["王五", 28],
 );
 // 返回: { id: 3, name: '王五', age: 28 }
 
 // 不使用 RETURNING，返回影响行数
 const rowCount = await app.pgsql.insert(
   "INSERT INTO users (name, age) VALUES ($1, $2)",
-  ['赵六', 32]
+  ["赵六", 32],
 );
 // 返回: 1
 ```
@@ -268,7 +276,7 @@ const rowCount = await app.pgsql.insert(
 ```js
 const affectedRows = await app.pgsql.update(
   "UPDATE users SET age = $1 WHERE id = $2",
-  [26, 1]
+  [26, 1],
 );
 // 返回: 1 (受影响的行数)
 ```
@@ -300,8 +308,8 @@ const result = await app.pgsql.run("SELECT * FROM users");
 ```js
 // SQL 可以是字符串或 [sql, values] 数组
 const results = await app.pgsql.transaction([
-  ["INSERT INTO users (name, age) VALUES ($1, $2)", ['张三', 25]],
-  ["INSERT INTO users (name, age) VALUES ($1, $2)", ['李四', 30]],
+  ["INSERT INTO users (name, age) VALUES ($1, $2)", ["张三", 25]],
+  ["INSERT INTO users (name, age) VALUES ($1, $2)", ["李四", 30]],
   ["UPDATE accounts SET balance = balance - $1 WHERE user_id = $2", [100, 1]],
   ["UPDATE accounts SET balance = balance + $1 WHERE user_id = $2", [100, 2]],
 ]);
@@ -313,8 +321,8 @@ const results = await app.pgsql.transaction([
 ```js
 try {
   await app.pgsql.transaction([
-    ["INSERT INTO users (name, age) VALUES ($1, $2)", ['张三', 25]],
-    ["INSERT INTO invalid_table (name) VALUES ($1)", ['test']], // 这条会失败
+    ["INSERT INTO users (name, age) VALUES ($1, $2)", ["张三", 25]],
+    ["INSERT INTO invalid_table (name) VALUES ($1)", ["test"]], // 这条会失败
   ]);
 } catch (error) {
   console.log(error.sqls); // 包含所有执行的 SQL
@@ -328,7 +336,7 @@ try {
 
 ```js
 const pool = app.pgsql.pool;
-const result = await pool.query('SELECT * FROM users WHERE id = $1', [1]);
+const result = await pool.query("SELECT * FROM users WHERE id = $1", [1]);
 console.log(result.rows);
 ```
 
@@ -355,42 +363,39 @@ INSERT INTO users (name, age) VALUES ($1, $2) RETURNING id: 2.567ms
 
 ```js
 // app/service/user.js
-const { Service } = require('egg');
+const { Service } = require("egg");
 
 class UserService extends Service {
   async create(name, age) {
     const result = await this.app.pgsql.insert(
-      'INSERT INTO users (name, age, created_at) VALUES ($1, $2, NOW()) RETURNING id',
-      [name, age]
+      "INSERT INTO users (name, age, created_at) VALUES ($1, $2, NOW()) RETURNING id",
+      [name, age],
     );
     return result.id;
   }
 
   async findById(id) {
-    return await this.app.pgsql.select(
-      'SELECT * FROM users WHERE id = $1',
-      [id]
-    );
+    return await this.app.pgsql.select("SELECT * FROM users WHERE id = $1", [
+      id,
+    ]);
   }
 
   async findAll() {
-    return await this.app.pgsql.selects(
-      'SELECT * FROM users ORDER BY id DESC'
-    );
+    return await this.app.pgsql.selects("SELECT * FROM users ORDER BY id DESC");
   }
 
   async update(id, data) {
     const affectedRows = await this.app.pgsql.update(
-      'UPDATE users SET name = $1, age = $2, updated_at = NOW() WHERE id = $3',
-      [data.name, data.age, id]
+      "UPDATE users SET name = $1, age = $2, updated_at = NOW() WHERE id = $3",
+      [data.name, data.age, id],
     );
     return affectedRows > 0;
   }
 
   async delete(id) {
     const deleted = await this.app.pgsql.del(
-      'DELETE FROM users WHERE id = $1',
-      [id]
+      "DELETE FROM users WHERE id = $1",
+      [id],
     );
     return deleted > 0;
   }
@@ -399,16 +404,16 @@ class UserService extends Service {
   async transfer(fromUserId, toUserId, amount) {
     return await this.app.pgsql.transaction([
       [
-        'UPDATE accounts SET balance = balance - $1 WHERE user_id = $2',
-        [amount, fromUserId]
+        "UPDATE accounts SET balance = balance - $1 WHERE user_id = $2",
+        [amount, fromUserId],
       ],
       [
-        'UPDATE accounts SET balance = balance + $1 WHERE user_id = $2',
-        [amount, toUserId]
+        "UPDATE accounts SET balance = balance + $1 WHERE user_id = $2",
+        [amount, toUserId],
       ],
       [
-        'INSERT INTO transactions (from_user, to_user, amount, created_at) VALUES ($1, $2, $3, NOW())',
-        [fromUserId, toUserId, amount]
+        "INSERT INTO transactions (from_user, to_user, amount, created_at) VALUES ($1, $2, $3, NOW())",
+        [fromUserId, toUserId, amount],
       ],
     ]);
   }
@@ -421,7 +426,7 @@ module.exports = UserService;
 
 ```js
 // app/controller/user.js
-const Controller = require('egg').Controller;
+const Controller = require("egg").Controller;
 
 class UserController extends Controller {
   async index() {
@@ -441,21 +446,21 @@ class UserController extends Controller {
     const { ctx } = this;
     const { name, age } = ctx.request.body;
     const userId = await ctx.service.user.create(name, age);
-    ctx.body = { id: userId, msg: '创建成功' };
+    ctx.body = { id: userId, msg: "创建成功" };
   }
 
   async update() {
     const { ctx } = this;
     const id = ctx.params.id;
     const success = await ctx.service.user.update(id, ctx.request.body);
-    ctx.body = { success, msg: success ? '更新成功' : '更新失败' };
+    ctx.body = { success, msg: success ? "更新成功" : "更新失败" };
   }
 
   async destroy() {
     const { ctx } = this;
     const id = ctx.params.id;
     const success = await ctx.service.user.delete(id);
-    ctx.body = { success, msg: success ? '删除成功' : '删除失败' };
+    ctx.body = { success, msg: success ? "删除成功" : "删除失败" };
   }
 }
 
@@ -468,21 +473,20 @@ module.exports = UserController;
 // app/service/sync.js
 class SyncService extends Service {
   async syncUserData(userId) {
-    const pg1 = this.app.pgsql.get('pg1'); // 主库
-    const pg2 = this.app.pgsql.get('pg2'); // 从库
+    const pg1 = this.app.pgsql.get("pg1"); // 主库
+    const pg2 = this.app.pgsql.get("pg2"); // 从库
 
     // 从主库读取用户数据
-    const user = await pg1.select(
-      'SELECT * FROM users WHERE id = $1',
-      [userId]
-    );
+    const user = await pg1.select("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
 
     if (user) {
       // 同步到从库
       await pg2.insert(
         `INSERT INTO users (id, name, age) VALUES ($1, $2, $3)
          ON CONFLICT (id) DO UPDATE SET name = $2, age = $3`,
-        [user.id, user.name, user.age]
+        [user.id, user.name, user.age],
       );
     }
 
@@ -524,7 +528,7 @@ await app.mysql.insert("INSERT INTO users (name) VALUES ('张三')");
 // PostgreSQL 写法（需要 RETURNING 获取 ID）
 const result = await app.pgsql.insert(
   "INSERT INTO users (name) VALUES ($1) RETURNING id",
-  ['张三']
+  ["张三"],
 );
 console.log(result.id);
 ```
@@ -540,14 +544,14 @@ console.log(result.id);
 4. **时区问题**（重要）：
 
    **问题描述**：PostgreSQL 的 `pg` 库默认会将 `TIMESTAMP` 和 `TIMESTAMPTZ` 类型转换为 JavaScript Date 对象，导致时区转换问题。
-   
+
    ```js
    // 数据库存储：2025-11-24 12:23:47 (本地时间)
    // 查询结果：  2025-11-24T04:23:47.000Z (UTC，可能相差 8 小时)
    ```
-   
+
    **解决方案**：从 **v1.1.6** 开始，插件已自动处理日期类型解析，将所有日期时间字段保持为字符串格式：
-   
+
    ```js
    // 插件已自动配置以下类型解析器：
    // - TIMESTAMP (1114): 不带时区的时间戳
@@ -555,22 +559,30 @@ console.log(result.id);
    // - DATE (1082): 日期
    // - TIME (1083/1266): 时间
    ```
-   
+
    **效果对比**：
+
    ```js
    // v1.1.6+ (已修复)
-   const user = await app.pgsql.select('SELECT create_time FROM users WHERE id = $1', [1]);
+   const user = await app.pgsql.select(
+     "SELECT create_time FROM users WHERE id = $1",
+     [1],
+   );
    console.log(user.create_time);
    // 输出: "2025-11-24 12:23:47" ✅ 正确
-   
+
    // v1.1.5 及之前版本
-   const user = await app.pgsql.select('SELECT create_time FROM users WHERE id = $1', [1]);
+   const user = await app.pgsql.select(
+     "SELECT create_time FROM users WHERE id = $1",
+     [1],
+   );
    console.log(user.create_time);
    // 输出: 2025-11-24T04:23:47.000Z ❌ 错误（Date 对象，可能时区不对）
    ```
-   
+
    **服务器时区设置**（可选）：
    如需在数据库层面设置时区，可在配置中添加：
+
    ```js
    config.pgsql = {
      client: {
@@ -579,7 +591,7 @@ console.log(result.id);
        password: "your_password",
        database: "your_database",
        // 可选：设置服务器会话时区
-       options: '-c timezone=Asia/Shanghai',
+       options: "-c timezone=Asia/Shanghai",
      },
    };
    ```
@@ -590,11 +602,11 @@ console.log(result.id);
 
 ```js
 try {
-  await app.pgsql.insert("INSERT INTO users (name) VALUES ($1)", ['test']);
+  await app.pgsql.insert("INSERT INTO users (name) VALUES ($1)", ["test"]);
 } catch (error) {
-  console.error('执行失败的 SQL:', error.sql);
-  console.error('参数:', error.values);
-  console.error('错误信息:', error.message);
+  console.error("执行失败的 SQL:", error.sql);
+  console.error("参数:", error.values);
+  console.error("错误信息:", error.message);
 }
 ```
 
@@ -602,16 +614,21 @@ try {
 
 1. **合理设置连接池大小**：根据并发量调整 `max` 参数
 2. **使用索引**：确保查询字段有适当的索引
-3. **避免 SELECT ***：明确指定需要的字段
+3. **避免 SELECT \***：明确指定需要的字段
 4. **批量操作**：使用事务进行批量插入/更新
 5. **读写分离**：使用多实例配置实现主从分离
 6. **使用连接池**：避免频繁创建和销毁连接
 7. **prepared statements**：对于重复执行的查询，考虑使用 prepared statements
 
-
-## 完整示例项目
+## 完整项目
 
 参考 [ruoyi-eggjs](https://github.com/undsky/ruoyi-eggjs) 项目查看完整使用示例。
+
+## 请我喝杯咖啡
+
+如果项目对你有帮助，可以请我喝杯咖啡 ☕️
+
+<img src="https://cdn.undsky.com/img/weixin10.jpg" max-width="300" height="500" /> <img src="https://cdn.undsky.com/img/zhifubao10.jpg" max-width="300" height="500" />
 
 ## 联系方式
 
@@ -629,4 +646,3 @@ try {
 ## License
 
 [MIT](LICENSE)
-
